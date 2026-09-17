@@ -36,6 +36,11 @@ if (isDev) {
 export default defineConfig({
   site: SITE_URL,
   output: "static",
+  // Nothing in this app uses cookies/session state — without this, the
+  // Cloudflare adapter silently auto-provisions a "SESSION" KV namespace on
+  // every deploy, which is both unnecessary and a source of its own deploy
+  // friction (namespace-already-exists collisions on repeat deploys).
+  session: false,
   adapter: cloudflare({
     imageService: "compile",
     // Persist D1/KV state between `astro dev` / `wrangler dev` runs locally.
