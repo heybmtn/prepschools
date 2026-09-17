@@ -14,12 +14,13 @@ compatibility_flags = ["nodejs_compat"]
 # Worker code.
 
 # D1 database used to store /submit/ form submissions (draft rows for manual review).
-# Create it with: wrangler d1 create prepschools_submissions
-# then paste the returned database_id below.
+# Already provisioned (see README "Deploying" step 1) — the 0001_init.sql
+# migration has been applied, so `wrangler d1 migrations apply` will find it
+# already up to date.
 [[d1_databases]]
 binding = "DB"
 database_name = "prepschools_submissions"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "e726bf33-1827-4025-9f5b-391bdaaacd03"
 migrations_dir = "migrations"
 
 # Non-secret env vars. Set the real values as Worker vars in the Cloudflare

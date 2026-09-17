@@ -137,17 +137,22 @@ static assets** — the same platform, one deployment model. That's what
 straight from `dist/client`, and only `/api/submit` and `/keystatic` run as
 Worker code, same as a Pages Function would have.
 
-1. **Create the D1 database**
+1. **D1 database** — already provisioned: `prepschools_submissions`
+   (`e726bf33-1827-4025-9f5b-391bdaaacd03`), with the `0001_init.sql`
+   migration applied, wired into `wrangler.toml` under `[[d1_databases]]`.
+   If you'd rather use your own database, create a new one and swap the ID:
    ```bash
    npx wrangler d1 create prepschools_submissions
+   npm run db:migrate:remote   # applies migrations/0001_init.sql
    ```
-   Copy the returned `database_id` into `wrangler.toml` under
-   `[[d1_databases]]`.
+   (`npm run db:migrate:local` runs the same migration against a local
+   dev-only database for `wrangler dev`.)
 
-2. **Run migrations**
+2. **Log in to Cloudflare** from a machine with account access — this
+   repo's sandbox build environment has no Cloudflare credentials, so the
+   steps below need to run from wherever you deploy from:
    ```bash
-   npm run db:migrate:local    # local dev database
-   npm run db:migrate:remote   # production D1
+   npx wrangler login
    ```
 
 3. **Set environment variables and secrets** (Cloudflare dashboard →
