@@ -1,5 +1,9 @@
 name = "prepschools"
-compatibility_date = "2025-01-01"
+# Must be 2025-08-15 or later: that's when Cloudflare exposed MessageChannel/
+# MessagePort as Worker globals, which Keystatic's React SSR needs at deploy
+# validation time (fixes "Uncaught ReferenceError: MessageChannel is not
+# defined" during `wrangler deploy`). Keep this current going forward.
+compatibility_date = "2026-09-17"
 compatibility_flags = ["nodejs_compat"]
 
 # This file is the source of truth for the project's own bindings (D1, env
