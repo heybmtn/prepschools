@@ -1,0 +1,38 @@
+name = "prepschools"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# This file is the source of truth for the project's own bindings (D1, env
+# vars). `astro build` (via @astrojs/cloudflare) merges it into a deploy-ready
+# config at dist/server/wrangler.json, with `main` and `[assets]` pointing at
+# the built Worker + static files. Deploy with that generated file — see
+# README.md "Deploying" — rather than pointing wrangler at this file directly.
+#
+# Cloudflare's current unified target for full-stack sites is a Worker with
+# static assets (the successor to Pages + Pages Functions): the static pages
+# are served straight from disk, and only /api/submit and /keystatic run as
+# Worker code.
+
+# D1 database used to store /submit/ form submissions (draft rows for manual review).
+# Create it with: wrangler d1 create prepschools_submissions
+# then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "prepschools_submissions"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# Non-secret env vars. Set the real values as Worker vars in the Cloudflare
+# dashboard (Settings -> Variables) — do not commit real keys here.
+[vars]
+PUBLIC_TURNSTILE_SITE_KEY = "REPLACE_WITH_TURNSTILE_SITE_KEY"
+EMAIL_PROVIDER = "resend"
+EMAIL_FROM = "submissions@prepschools.example"
+EMAIL_TO = "editors@prepschools.example"
+PUBLIC_WEBMCP_ENABLED = "false"
+
+# Secrets (set via `wrangler secret put <NAME> --config dist/server/wrangler.json`,
+# never in this file):
+#   TURNSTILE_SECRET_KEY
+#   RESEND_API_KEY        (if EMAIL_PROVIDER = "resend")
+#   MAILCHANNELS_API_KEY  (if EMAIL_PROVIDER = "mailchannels", only needed if using MailChannels' paid API tier)

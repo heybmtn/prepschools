@@ -1,0 +1,76 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import SchoolCard from "../../components/SchoolCard.astro";
+import { countyHref, groupByCounty, nationSlug } from "../../lib/schools";
+import { breadcrumbJsonLd, itemListJsonLd } from "../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const schools = await getCollection("schools");
+  const nations = [...new Set(schools.map((s) => s.data.nation))];
+  return nations.map((nation) => {
+    const nationSchools = schools.filter((s) => s.data.nation === nation);
+    return {
+      params: { nation: nationSlug(nation) },
+      props: { nation, schools: nationSchools },
+    };
+  });
+}
+
+const { nation, schools } = Astro.props;
+const counties = [...groupByCounty(schools).values()].sort((a, b) => a.county.localeCompare(b.county));
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Prep Schools", url: "/prep-schools/" },
+  { name: nation, url: `/${nationSlug(nation)}/` },
+];
+---
+
+<Base
+  title={`Prep Schools in ${nation}`}
+  description={`Browse independent preparatory schools in ${nation}, grouped by county.`}
+  jsonLd={[breadcrumbJsonLd(breadcrumbItems), itemListJsonLd(`Prep Schools in ${nation}`, schools)]}
+>
+  <div class="wrap section">
+    <Breadcrumbs items={breadcrumbItems} />
+    <p class="eyebrow">Nation guide</p>
+    <h1>Prep schools in {nation}</h1>
+    <p class="muted">{schools.length} schools across {counties.length} {counties.length === 1 ? "county" : "counties"}.</p>
+
+    <div class="county-grid">
+      {counties.map(({ county, schools: countySchools }) => (
+        <a class="card county-card" href={countyHref(nation, county)}>
+          <h2>{county}</h2>
+          <p class="muted">{countySchools.length} {countySchools.length === 1 ? "school" : "schools"}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="section-head">
+      <h2>All schools in {nation}</h2>
+    </div>
+    <div class="grid">
+      {schools.map((school) => <SchoolCard school={school} />)}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .county-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin: var(--space-6) 0 var(--space-16);
+  }
+
+  .county-card {
+    padding: var(--space-6);
+  }
+
+  .county-card h2 {
+    margin: 0 0 var(--space-1);
+    font-size: 1.1rem;
+  }
+</style>

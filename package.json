@@ -1,0 +1,36 @@
+{
+  "name": "prepschools",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev --config dist/server/wrangler.json",
+    "astro": "astro",
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply prepschools_submissions --local",
+    "db:migrate:remote": "wrangler d1 migrations apply prepschools_submissions --remote",
+    "deploy": "astro build && wrangler deploy --config dist/server/wrangler.json"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.2",
+    "@astrojs/mdx": "^8.0.1",
+    "@astrojs/react": "^6.0.6",
+    "@astrojs/rss": "^4.0.11",
+    "@astrojs/sitemap": "^3.7.4",
+    "@keystatic/astro": "^6.0.0",
+    "@keystatic/core": "^0.6.9",
+    "astro": "^7.3.3",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260917.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.125.0"
+  }
+}

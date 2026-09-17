@@ -1,0 +1,43 @@
+---
+import Base from "../../layouts/Base.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { breadcrumbJsonLd } from "../../lib/jsonld";
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Contact", url: "/contact/" },
+];
+---
+
+<Base
+  title="Contact"
+  description="Get in touch with the UK Prep Schools directory — corrections, listing updates and general enquiries."
+  jsonLd={breadcrumbJsonLd(breadcrumbItems)}
+>
+  <div class="wrap section prose">
+    <Breadcrumbs items={breadcrumbItems} />
+    <p class="eyebrow">Contact</p>
+    <h1>Get in touch</h1>
+    <p class="muted lede">
+      For corrections to an existing listing, verification enquiries, or anything else,
+      email us and we'll get back to you.
+    </p>
+    <p>
+      <a class="btn btn-primary" href="mailto:hello@prepschools.example">hello@prepschools.example</a>
+    </p>
+    <p class="muted">
+      To add a new school to the directory, use the <a href="/submit/">submit a school</a> form
+      instead — it routes straight to our editorial queue.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .prose {
+    max-width: 680px;
+  }
+
+  .lede {
+    font-size: 1.1rem;
+  }
+</style>

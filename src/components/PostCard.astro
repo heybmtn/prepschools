@@ -1,0 +1,84 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { title, excerpt, heroImage, region, publishedDate } = post.data;
+const href = `/blog/${post.data.slug}/`;
+const dateLabel = publishedDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+---
+
+<article class="card post-card">
+  <a href={href} class="post-card-image" tabindex="-1">
+    {heroImage ? (
+      <img src={heroImage.src} alt={heroImage.alt} loading="lazy" />
+    ) : (
+      <div class="post-card-placeholder" aria-hidden="true"></div>
+    )}
+  </a>
+  <div class="post-card-body">
+    {region && <p class="post-card-region">{region}</p>}
+    <h3><a href={href}>{title}</a></h3>
+    <p class="muted post-card-excerpt">{excerpt}</p>
+    <p class="post-card-date muted">{dateLabel}</p>
+  </div>
+</article>
+
+<style>
+  .post-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-card-image {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-teal-tint);
+  }
+
+  .post-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .post-card-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-teal-tint), var(--color-bg));
+  }
+
+  .post-card-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .post-card-region {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+    margin: 0;
+  }
+
+  .post-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .post-card-excerpt {
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  .post-card-date {
+    font-size: 0.82rem;
+    margin: 0;
+  }
+</style>

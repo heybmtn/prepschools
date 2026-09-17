@@ -1,0 +1,7 @@
+# Copy to .dev.vars for `wrangler pages dev` / `npm run preview`.
+# These are the server-side secrets the /api/submit function needs locally.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+EMAIL_PROVIDER=resend
+EMAIL_FROM=submissions@prepschools.example
+EMAIL_TO=editors@prepschools.example
+RESEND_API_KEY=

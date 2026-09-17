@@ -1,0 +1,32 @@
+---
+import { countyHref } from "../lib/schools";
+
+interface Props {
+  counties: { nation: string; county: string; count: number }[];
+}
+
+const { counties } = Astro.props;
+---
+
+<ul class="chip-row county-chips">
+  {counties.map(({ nation, county, count }) => (
+    <li>
+      <a class="chip" href={countyHref(nation, county)}>
+        {county} <span class="muted county-count">({count})</span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .county-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .county-count {
+    font-weight: 500;
+    margin-left: 0.15em;
+  }
+</style>

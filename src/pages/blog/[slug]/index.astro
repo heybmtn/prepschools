@@ -1,0 +1,80 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { breadcrumbJsonLd, blogPostingJsonLd } from "../../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, excerpt, heroImage, region, publishedDate, updatedDate } = post.data;
+
+const url = `/blog/${post.data.slug}/`;
+const dateLabel = publishedDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Guides", url: "/blog/" },
+  { name: title, url },
+];
+---
+
+<Base
+  title={title}
+  description={excerpt}
+  image={heroImage?.src}
+  jsonLd={[
+    breadcrumbJsonLd(breadcrumbItems),
+    blogPostingJsonLd({ title, excerpt, url, image: heroImage?.src, publishedDate, updatedDate }),
+  ]}
+>
+  <article class="wrap section post">
+    <Breadcrumbs items={breadcrumbItems} />
+    <header class="post-header">
+      {region && <p class="eyebrow">{region}</p>}
+      <h1>{title}</h1>
+      <p class="muted post-meta">Published {dateLabel}</p>
+    </header>
+    {heroImage && (
+      <img class="post-hero" src={heroImage.src} alt={heroImage.alt} />
+    )}
+    <div class="post-content">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post {
+    max-width: 760px;
+  }
+
+  .post-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .post-meta {
+    font-size: 0.9rem;
+  }
+
+  .post-hero {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-8);
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+  }
+
+  .post-content :global(h2) {
+    margin-top: var(--space-8);
+  }
+</style>

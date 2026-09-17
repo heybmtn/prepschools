@@ -1,0 +1,20 @@
+---
+interface Props {
+  href?: string;
+  active?: boolean;
+}
+
+const { href, active = false } = Astro.props;
+const Tag = href ? "a" : "span";
+---
+
+<Tag href={href} class:list={["chip-tag", { active }]}>
+  <slot />
+</Tag>
+
+<style>
+  .active {
+    background: var(--color-teal);
+    color: #fff;
+  }
+</style>

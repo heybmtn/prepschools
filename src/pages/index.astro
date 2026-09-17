@@ -1,0 +1,117 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import SchoolCard from "../components/SchoolCard.astro";
+import PostCard from "../components/PostCard.astro";
+import CountyChips from "../components/CountyChips.astro";
+import { groupByCounty } from "../lib/schools";
+import { organizationJsonLd, websiteJsonLd } from "../lib/jsonld";
+import { SITE } from "../lib/site";
+
+const schools = await getCollection("schools");
+const posts = await getCollection("posts");
+
+const latestSchools = [...schools]
+  .sort((a, b) => b.data.lastUpdated.valueOf() - a.data.lastUpdated.valueOf())
+  .slice(0, 6);
+
+const latestPosts = [...posts]
+  .sort((a, b) => b.data.publishedDate.valueOf() - a.data.publishedDate.valueOf())
+  .slice(0, 3);
+
+const counties = [...groupByCounty(schools).values()]
+  .map((g) => ({ nation: g.nation, county: g.county, count: g.schools.length }))
+  .sort((a, b) => b.count - a.count || a.county.localeCompare(b.county));
+---
+
+<Base title={SITE.name} jsonLd={[organizationJsonLd(), websiteJsonLd()]}>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <p class="eyebrow">The independent prep school directory</p>
+      <h1>Find the right prep school, without the guesswork.</h1>
+      <p class="hero-sub muted">
+        A curated directory of UK preparatory schools — day and boarding, co-ed, boys' and
+        girls', ages 4 to 13 — built for parents comparing options county by county.
+      </p>
+      <div class="hero-actions">
+        <a href="/prep-schools/" class="btn btn-primary">Browse all schools</a>
+        <a href="/submit/" class="btn btn-outline">Submit a school</a>
+      </div>
+      <div class="hero-chips">
+        <p class="hero-chips-label muted">Browse by county</p>
+        <CountyChips counties={counties.slice(0, 10)} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Recently updated</p>
+          <h2>Latest listings</h2>
+        </div>
+        <a href="/prep-schools/" class="link-arrow">All schools</a>
+      </div>
+      <div class="grid">
+        {latestSchools.map((school) => <SchoolCard school={school} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Advice</p>
+          <h2>Latest guides</h2>
+        </div>
+        <a href="/blog/" class="link-arrow">All guides</a>
+      </div>
+      <div class="grid">
+        {latestPosts.map((post) => <PostCard post={post} />)}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: var(--space-24) var(--space-16);
+    background: linear-gradient(180deg, var(--color-teal-tint) 0%, var(--color-bg) 78%);
+  }
+
+  .hero-inner {
+    max-width: 760px;
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    max-width: 52ch;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 var(--space-8);
+    flex-wrap: wrap;
+  }
+
+  .hero-chips-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0 0 var(--space-2);
+  }
+
+  .section-alt {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      padding-top: var(--space-16);
+    }
+  }
+</style>

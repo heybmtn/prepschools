@@ -1,0 +1,63 @@
+---
+import Base from "../../layouts/Base.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { breadcrumbJsonLd } from "../../lib/jsonld";
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "About", url: "/about/" },
+];
+---
+
+<Base
+  title="About"
+  description="About the UK Prep Schools directory — how listings are compiled, what verification means, and how to get in touch."
+  jsonLd={breadcrumbJsonLd(breadcrumbItems)}
+>
+  <div class="wrap section prose">
+    <Breadcrumbs items={breadcrumbItems} />
+    <p class="eyebrow">About</p>
+    <h1>An independent directory of UK prep schools</h1>
+    <p class="muted lede">
+      UK Prep Schools is an independent directory of fee-paying preparatory schools across
+      England, Scotland, Wales and Northern Ireland — built to make comparing schools across
+      counties easier for parents.
+    </p>
+
+    <h2>What we list</h2>
+    <p>
+      Each listing covers the basics parents actually compare first: location, age range,
+      gender, day/boarding options, and a link straight through to the school's own website
+      for admissions and fees. We keep descriptions factual and neutral rather than
+      promotional.
+    </p>
+
+    <h2>Verified listings</h2>
+    <p>
+      Most listings are compiled from publicly available information. A school marked
+      "Verified" has confirmed its own details directly with us — this is a paid feature for
+      schools that want to keep their listing current, and it is never applied automatically.
+    </p>
+
+    <h2>Corrections</h2>
+    <p>
+      Spotted something out of date? <a href="/contact/">Get in touch</a> and we'll update it.
+      Schools can also <a href="/submit/">submit a new listing</a> if they're not yet in the
+      directory.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .prose {
+    max-width: 720px;
+  }
+
+  .lede {
+    font-size: 1.1rem;
+  }
+
+  .prose h2 {
+    margin-top: var(--space-8);
+  }
+</style>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#faf8f4"/>
+  <rect width="1200" height="630" fill="none" stroke="#e4ded2" stroke-width="2"/>
+  <rect x="60" y="60" width="64" height="64" rx="14" fill="#0c5c57"/>
+  <path d="M76 108V84l16-8 16 8v24" stroke="#faf8f4" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="60" y="220" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#16201f">UK Prep Schools</text>
+  <text x="60" y="280" font-family="Arial, sans-serif" font-size="30" fill="#5b6664">The independent directory of UK preparatory schools</text>
+</svg>

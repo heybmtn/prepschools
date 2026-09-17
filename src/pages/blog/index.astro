@@ -1,0 +1,39 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import PostCard from "../../components/PostCard.astro";
+import { breadcrumbJsonLd } from "../../lib/jsonld";
+
+const posts = (await getCollection("posts")).sort(
+  (a, b) => b.data.publishedDate.valueOf() - a.data.publishedDate.valueOf()
+);
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Guides", url: "/blog/" },
+];
+---
+
+<Base
+  title="Guides"
+  description="Practical guides for parents choosing a UK preparatory school — county by county advice, Common Entrance tips and more."
+  jsonLd={breadcrumbJsonLd(breadcrumbItems)}
+>
+  <div class="wrap section">
+    <Breadcrumbs items={breadcrumbItems} />
+    <p class="eyebrow">Advice</p>
+    <h1>Guides</h1>
+    <p class="muted">Practical, county-by-county advice for parents choosing a prep school.</p>
+
+    <div class="grid blog-grid">
+      {posts.map((post) => <PostCard post={post} />)}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .blog-grid {
+    margin-top: var(--space-8);
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+import type { SchoolEntry } from "../lib/schools";
+import { schoolHref, schoolTags } from "../lib/schools";
+
+interface Props {
+  school: SchoolEntry;
+}
+
+const { school } = Astro.props;
+const { name, town, county, description, verified, image } = school.data;
+const tags = schoolTags(school.data);
+const href = schoolHref(school.data);
+---
+
+<article class="card school-card">
+  {image && (
+    <a href={href} class="school-card-image" tabindex="-1">
+      <img src={image.src} alt={image.alt} loading="lazy" />
+    </a>
+  )}
+  <div class="school-card-body">
+    <p class="school-card-location">{town}, {county}</p>
+    <h3><a href={href}>{name}</a>{verified && <span class="verified-badge" title="Verified listing">✓ Verified</span>}</h3>
+    <p class="school-card-desc muted">{description}</p>
+    <ul class="chip-row tag-list">
+      {tags.map((tag) => (
+        <li class="chip-tag">{tag}</li>
+      ))}
+    </ul>
+    <a href={href} class="link-arrow school-card-cta">View</a>
+  </div>
+</article>
+
+<style>
+  .school-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .school-card-image {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-teal-tint);
+  }
+
+  .school-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .school-card-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  .school-card-location {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+    margin: 0;
+  }
+
+  .school-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .verified-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-teal);
+    background: var(--color-teal-tint);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-pill);
+  }
+
+  .school-card-desc {
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  .tag-list {
+    list-style: none;
+    margin: var(--space-1) 0 0;
+    padding: 0;
+  }
+
+  .school-card-cta {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    font-size: 0.9rem;
+  }
+</style>

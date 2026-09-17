@@ -1,0 +1,58 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import SchoolCard from "../../../components/SchoolCard.astro";
+import { countySlug, nationSlug, nationHref } from "../../../lib/schools";
+import { breadcrumbJsonLd, itemListJsonLd } from "../../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const schools = await getCollection("schools");
+  const groups = new Map<string, { nation: string; county: string; schools: typeof schools }>();
+
+  for (const school of schools) {
+    const key = `${nationSlug(school.data.nation)}/${countySlug(school.data.county)}`;
+    if (!groups.has(key)) {
+      groups.set(key, { nation: school.data.nation, county: school.data.county, schools: [] });
+    }
+    groups.get(key)!.schools.push(school);
+  }
+
+  return [...groups.values()].map(({ nation, county, schools: countySchools }) => ({
+    params: { nation: nationSlug(nation), county: countySlug(county) },
+    props: { nation, county, schools: countySchools },
+  }));
+}
+
+const { nation, county, schools } = Astro.props;
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Prep Schools", url: "/prep-schools/" },
+  { name: nation, url: nationHref(nation) },
+  { name: county, url: `/${nationSlug(nation)}/${countySlug(county)}/` },
+];
+---
+
+<Base
+  title={`Prep Schools in ${county}`}
+  description={`Independent preparatory schools in ${county}, ${nation} — day and boarding, co-ed, boys' and girls' schools for ages 4 to 13.`}
+  jsonLd={[breadcrumbJsonLd(breadcrumbItems), itemListJsonLd(`Prep Schools in ${county}`, schools)]}
+>
+  <div class="wrap section">
+    <Breadcrumbs items={breadcrumbItems} />
+    <p class="eyebrow">{nation}</p>
+    <h1>Prep schools in {county}</h1>
+    <p class="muted">{schools.length} {schools.length === 1 ? "school" : "schools"} listed in {county}.</p>
+
+    <div class="grid county-schools">
+      {schools.map((school) => <SchoolCard school={school} />)}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .county-schools {
+    margin-top: var(--space-8);
+  }
+</style>

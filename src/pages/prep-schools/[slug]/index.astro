@@ -1,0 +1,262 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import {
+  boardingLabel,
+  genderLabel,
+  countyHref,
+  nationHref,
+  schoolHref,
+} from "../../../lib/schools";
+import { breadcrumbJsonLd, schoolJsonLd } from "../../../lib/jsonld";
+
+export async function getStaticPaths() {
+  const schools = await getCollection("schools");
+  return schools.map((school) => ({
+    params: { slug: school.data.slug },
+    props: { school },
+  }));
+}
+
+const { school } = Astro.props;
+const { Content } = await render(school);
+const {
+  name,
+  town,
+  county,
+  nation,
+  ageRange,
+  gender,
+  boarding,
+  founded,
+  religiousAffiliation,
+  feederSchools,
+  website,
+  facilities,
+  socials,
+  verified,
+  lastUpdated,
+} = school.data;
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: nation, url: nationHref(nation) },
+  { name: county, url: countyHref(nation, county) },
+  { name, url: schoolHref(school.data) },
+];
+
+const lastUpdatedLabel = lastUpdated.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const jsonPath = `/prep-schools/${school.data.slug}.json`;
+---
+
+<Base
+  title={name}
+  description={school.data.description}
+  image={school.data.image?.src}
+  alternateJson={jsonPath}
+  jsonLd={[breadcrumbJsonLd(breadcrumbItems), schoolJsonLd(school)]}
+>
+  <article class="wrap section school-detail">
+    <Breadcrumbs items={breadcrumbItems} />
+
+    <header class="school-header">
+      <p class="eyebrow">{town}, {county}, {nation}</p>
+      <h1>{name} {verified && <span class="verified-badge">✓ Verified</span>}</h1>
+      <p class="muted school-lede">{school.data.description}</p>
+      <ul class="chip-row">
+        <li class="chip-tag">{boardingLabel[boarding]}</li>
+        <li class="chip-tag">{genderLabel[gender]}</li>
+        <li class="chip-tag">Ages {ageRange}</li>
+        {religiousAffiliation && <li class="chip-tag">{religiousAffiliation}</li>}
+      </ul>
+      <div class="school-actions">
+        <a href={website} class="btn btn-primary" rel="noopener" target="_blank">
+          Visit official website
+        </a>
+        <a href={jsonPath} class="muted small-link">View as JSON</a>
+      </div>
+    </header>
+
+    <div class="school-body">
+      <div class="school-content">
+        <Content />
+      </div>
+
+      <aside class="school-facts" aria-label="Key facts">
+        <h2 class="visually-hidden">Key facts</h2>
+        <dl>
+          <div>
+            <dt>Location</dt>
+            <dd><a href={countyHref(nation, county)}>{town}, {county}</a></dd>
+          </div>
+          <div>
+            <dt>Age range</dt>
+            <dd>{ageRange}</dd>
+          </div>
+          <div>
+            <dt>Gender</dt>
+            <dd>{genderLabel[gender]}</dd>
+          </div>
+          <div>
+            <dt>Day / boarding</dt>
+            <dd>{boardingLabel[boarding]}</dd>
+          </div>
+          {founded && (
+            <div>
+              <dt>Founded</dt>
+              <dd>{founded}</dd>
+            </div>
+          )}
+          {feederSchools && feederSchools.length > 0 && (
+            <div>
+              <dt>Linked / feeder senior schools</dt>
+              <dd>{feederSchools.join(", ")}</dd>
+            </div>
+          )}
+          {facilities && facilities.length > 0 && (
+            <div>
+              <dt>Facilities</dt>
+              <dd>{facilities.join(", ")}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Official website</dt>
+            <dd><a href={website} rel="noopener" target="_blank">{new URL(website).hostname}</a></dd>
+          </div>
+          {socials && Object.keys(socials).length > 0 && (
+            <div>
+              <dt>Social</dt>
+              <dd class="social-links">
+                {Object.entries(socials).map(([platform, url]) => url && (
+                  <a href={url} rel="noopener" target="_blank">{platform}</a>
+                ))}
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>Listing last updated</dt>
+            <dd>{lastUpdatedLabel}</dd>
+          </div>
+        </dl>
+        <p class="disclaimer muted">
+          Information is provided for guidance only — always confirm admissions details,
+          fees and open days directly with the school.
+        </p>
+      </aside>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .school-header {
+    max-width: 760px;
+    margin-bottom: var(--space-8);
+  }
+
+  .school-header h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .verified-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-teal);
+    background: var(--color-teal-tint);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-pill);
+  }
+
+  .school-lede {
+    font-size: 1.1rem;
+    max-width: 62ch;
+  }
+
+  .school-actions {
+    margin-top: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .small-link {
+    font-size: 0.85rem;
+    text-decoration: underline;
+  }
+
+  .school-body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  .school-content {
+    max-width: 68ch;
+    font-size: 1.02rem;
+  }
+
+  .school-content :global(h2) {
+    margin-top: var(--space-8);
+  }
+
+  .school-facts {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    position: sticky;
+    top: 96px;
+  }
+
+  .school-facts dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .school-facts dt {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .school-facts dd {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .school-facts a {
+    color: var(--color-teal);
+    font-weight: 600;
+  }
+
+  .social-links {
+    display: flex;
+    gap: var(--space-3);
+    text-transform: capitalize;
+  }
+
+  .disclaimer {
+    font-size: 0.8rem;
+    margin: var(--space-6) 0 0;
+  }
+
+  @media (max-width: 860px) {
+    .school-body {
+      grid-template-columns: 1fr;
+    }
+
+    .school-facts {
+      position: static;
+    }
+  }
+</style>

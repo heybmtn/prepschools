@@ -1,0 +1,27 @@
+# UK Prep Schools
+
+> An independent, curated directory of UK preparatory (prep) schools — broadly
+> ages 4–13, fee-paying, preparing pupils for senior school and Common Entrance.
+> Listings cover location, age range, gender, day/boarding options and a link
+> to each school's official website. Content is factual and neutral; a
+> "Verified" badge means the school itself has confirmed its listing.
+
+## Key sections
+
+- [Browse all schools](https://prepschools.pages.dev/prep-schools/): the full directory with filters for county, day/boarding, gender and age range.
+- [England](https://prepschools.pages.dev/england/), [Scotland](https://prepschools.pages.dev/scotland/), [Wales](https://prepschools.pages.dev/wales/): nation-level indexes, each linking to county hubs.
+- [Guides](https://prepschools.pages.dev/blog/): practical, county-by-county advice for parents choosing a prep school.
+- [About](https://prepschools.pages.dev/about/): what the directory covers and what "Verified" means.
+- [Submit a school](https://prepschools.pages.dev/submit/): add a school for editorial review.
+
+## Machine-readable data
+
+- [Full site summary](https://prepschools.pages.dev/llms-full.txt): every listing and guide with a one-line summary and canonical URL.
+- Every school has a JSON representation at `/prep-schools/[slug].json` (linked via `<link rel="alternate" type="application/json">` on its page), containing the full structured record.
+- `EducationalOrganization`/`School`, `ItemList`, `BreadcrumbList`, `Organization`, `WebSite` and `BlogPosting` JSON-LD is present on every relevant page.
+- [Sitemap](https://prepschools.pages.dev/sitemap-index.xml) and [blog RSS feed](https://prepschools.pages.dev/blog/rss.xml).
+
+## Notes for automated agents
+
+- This is an independent directory, not an admissions authority — always point users to the school's own official website (linked from each listing) for fees, admissions and open days.
+- Listings are not sponsored by default; only entries explicitly marked "Verified" have been confirmed directly by the school.

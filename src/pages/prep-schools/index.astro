@@ -1,0 +1,182 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import SchoolCard from "../../components/SchoolCard.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { boardingLabel, genderLabel, parseAgeRange, uniqueCounties } from "../../lib/schools";
+import { breadcrumbJsonLd, itemListJsonLd } from "../../lib/jsonld";
+
+const schools = (await getCollection("schools")).sort((a, b) => a.data.name.localeCompare(b.data.name));
+const counties = uniqueCounties(schools);
+
+const ageBands = [
+  { label: "Any age", value: "any", min: 0, max: 18 },
+  { label: "4–7 (pre-prep)", value: "4-7", min: 4, max: 7 },
+  { label: "7–11", value: "7-11", min: 7, max: 11 },
+  { label: "11–13", value: "11-13", min: 11, max: 13 },
+];
+
+const breadcrumbItems = [
+  { name: "Home", url: "/" },
+  { name: "Prep Schools", url: "/prep-schools/" },
+];
+---
+
+<Base
+  title="Browse UK Prep Schools"
+  description="Filter independent UK preparatory schools by county, day or boarding, gender, and age range."
+  jsonLd={[breadcrumbJsonLd(breadcrumbItems), itemListJsonLd("UK Prep Schools", schools)]}
+>
+  <div class="wrap section">
+    <Breadcrumbs items={breadcrumbItems} />
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Directory</p>
+        <h1>All prep schools</h1>
+        <p class="muted">{schools.length} schools listed. Filter by county, day/boarding, gender and age range.</p>
+      </div>
+    </div>
+
+    <form id="filters" class="filters" aria-label="Filter schools">
+      <div class="filter-field">
+        <label for="f-county">County</label>
+        <select id="f-county" name="county">
+          <option value="any">All counties</option>
+          {counties.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="f-boarding">Day / boarding</label>
+        <select id="f-boarding" name="boarding">
+          <option value="any">Any</option>
+          <option value="day">Day only</option>
+          <option value="boarding">Boarding only</option>
+          <option value="day-and-boarding">Day & boarding</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="f-gender">Gender</label>
+        <select id="f-gender" name="gender">
+          <option value="any">Any</option>
+          <option value="co-ed">Co-ed</option>
+          <option value="boys">Boys</option>
+          <option value="girls">Girls</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="f-age">Age range</label>
+        <select id="f-age" name="age">
+          {ageBands.map((band) => <option value={band.value}>{band.label}</option>)}
+        </select>
+      </div>
+      <button type="button" id="f-reset" class="btn btn-outline reset-btn">Reset</button>
+    </form>
+
+    <p id="empty-state" class="muted" hidden>No schools match those filters yet. Try widening your search.</p>
+
+    <div class="grid" id="school-grid">
+      {schools.map((school) => {
+        const { min, max } = parseAgeRange(school.data.ageRange);
+        return (
+          <div
+            class="grid-item"
+            data-county={school.data.county}
+            data-boarding={school.data.boarding}
+            data-gender={school.data.gender}
+            data-age-min={min}
+            data-age-max={max}
+          >
+            <SchoolCard school={school} />
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 160px;
+  }
+
+  .filter-field label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
+
+  .filter-field select {
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--color-text);
+  }
+
+  .reset-btn {
+    padding: 0.6rem 1.1rem;
+  }
+</style>
+
+<script>
+  const form = document.getElementById("filters") as HTMLFormElement;
+  const items = Array.from(document.querySelectorAll<HTMLElement>("#school-grid .grid-item"));
+  const emptyState = document.getElementById("empty-state") as HTMLElement;
+  const resetBtn = document.getElementById("f-reset") as HTMLButtonElement;
+
+  function applyFilters() {
+    const county = (document.getElementById("f-county") as HTMLSelectElement).value;
+    const boarding = (document.getElementById("f-boarding") as HTMLSelectElement).value;
+    const gender = (document.getElementById("f-gender") as HTMLSelectElement).value;
+    const age = (document.getElementById("f-age") as HTMLSelectElement).value;
+
+    let ageMin = 0;
+    let ageMax = 18;
+    if (age !== "any") {
+      const [lo, hi] = age.split("-").map(Number);
+      ageMin = lo;
+      ageMax = hi;
+    }
+
+    let visibleCount = 0;
+    for (const item of items) {
+      const matchesCounty = county === "any" || item.dataset.county === county;
+      const matchesBoarding = boarding === "any" || item.dataset.boarding === boarding;
+      const matchesGender = gender === "any" || item.dataset.gender === gender;
+      const schoolMin = Number(item.dataset.ageMin);
+      const schoolMax = Number(item.dataset.ageMax);
+      const matchesAge = age === "any" || (schoolMin <= ageMax && schoolMax >= ageMin);
+
+      const visible = matchesCounty && matchesBoarding && matchesGender && matchesAge;
+      item.hidden = !visible;
+      if (visible) visibleCount++;
+    }
+
+    emptyState.hidden = visibleCount !== 0;
+  }
+
+  form.addEventListener("change", applyFilters);
+  resetBtn.addEventListener("click", () => {
+    form.reset();
+    applyFilters();
+  });
+</script>
