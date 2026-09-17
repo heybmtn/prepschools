@@ -3,10 +3,18 @@ import { config, fields, collection } from "@keystatic/core";
 // Thin CMS layer: every field here maps 1:1 onto the Zod schema in
 // src/content/config.ts. Swap this file (and the storage block below) for a
 // different backend later without touching any template or page.
-const isProd = process.env.NODE_ENV === "production";
+//
+// Keystatic only ever runs via `npm run dev` (see astro.config.mjs — it's
+// excluded from `astro build`/production entirely). Storage mode is picked
+// by whether a Keystatic GitHub App is configured locally, not by NODE_ENV:
+// no KEYSTATIC_GITHUB_CLIENT_ID set -> local filesystem storage, so anyone
+// can run `npm run dev` and preview/use the editor with zero setup. Set it
+// (see README "Adding or editing a listing") -> GitHub storage mode, so
+// saves commit straight to the repo and the live site redeploys.
+const hasGitHubApp = Boolean(process.env.KEYSTATIC_GITHUB_CLIENT_ID);
 
 export default config({
-  storage: isProd
+  storage: hasGitHubApp
     ? {
         kind: "github",
         repo: { owner: "heybmtn", name: "prepschools" },

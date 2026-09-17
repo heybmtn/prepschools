@@ -1,8 +1,4 @@
 name = "prepschools"
-# Must be 2025-08-15 or later: that's when Cloudflare exposed MessageChannel/
-# MessagePort as Worker globals, which Keystatic's React SSR needs at deploy
-# validation time (fixes "Uncaught ReferenceError: MessageChannel is not
-# defined" during `wrangler deploy`). Keep this current going forward.
 compatibility_date = "2026-09-17"
 compatibility_flags = ["nodejs_compat"]
 
@@ -14,8 +10,9 @@ compatibility_flags = ["nodejs_compat"]
 #
 # Cloudflare's current unified target for full-stack sites is a Worker with
 # static assets (the successor to Pages + Pages Functions): the static pages
-# are served straight from disk, and only /api/submit and /keystatic run as
-# Worker code.
+# are served straight from disk, and only /api/submit runs as Worker code —
+# Keystatic (/keystatic) is dev-only and never part of this build, see
+# astro.config.mjs.
 
 # D1 database used to store /submit/ form submissions (draft rows for manual review).
 # Already provisioned (see README "Deploying" step 1) — the 0001_init.sql

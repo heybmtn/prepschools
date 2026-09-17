@@ -3,13 +3,13 @@
 A curated, editorial directory of UK independent preparatory schools (day and
 boarding, ages ~4–13), built with Astro and deployed on Cloudflare. Content
 lives in the repo as MDX/JSON and is edited either by hand or through
-[Keystatic](https://keystatic.com) at `/keystatic`.
+[Keystatic](https://keystatic.com), run locally via `npm run dev` at
+`/keystatic` (see [why it's dev-only](#why-keystatic-is-dev-only) below).
 
 ## Architecture
 
 - **Astro 7**, static-first. Every page prerenders to HTML at build time
-  except `/api/submit` (the form handler) and `/keystatic` (the CMS editor),
-  which run on request.
+  except `/api/submit` (the form handler), which runs on request.
 - **`@astrojs/cloudflare`** adapter targets Cloudflare's Worker-with-static-assets
   runtime — the current unified successor to "Pages + Pages Functions" (see
   [Deploying](#deploying) below for what this means in practice).
@@ -19,19 +19,41 @@ lives in the repo as MDX/JSON and is edited either by hand or through
 - **Keystatic** (`keystatic.config.ts`) is a thin editing layer directly on
   top of those same files — every field maps 1:1 onto the Zod schema, so
   there's no second source of truth. It writes straight back to the MDX
-  files (GitHub storage mode in production, so a save commits and redeploys;
-  local filesystem storage in dev). If you ever want to swap in a hosted CMS
-  (e.g. Sanity), only `keystatic.config.ts` and the small `astro:content`
-  loader in `src/content.config.ts` need to change — templates and pages
-  read plain Content Collection data and don't know Keystatic exists.
+  files (GitHub storage mode when a GitHub App is configured, so a save
+  commits and redeploys the live site; local filesystem storage otherwise).
+  If you ever want to swap in a hosted CMS (e.g. Sanity), only
+  `keystatic.config.ts` and the small `astro:content` loader in
+  `src/content.config.ts` need to change — templates and pages read plain
+  Content Collection data and don't know Keystatic exists.
 - **D1** stores draft `/submit/` form submissions for manual review
   (`migrations/0001_init.sql`). Nothing submitted through the form is ever
   auto-published — an editor promotes a submission into a Keystatic-managed
   MDX file by hand.
-- **TypeScript** throughout; no client framework except React, which is only
-  used by Keystatic's own admin UI. The site's own interactivity (the
-  `/prep-schools/` facet filters, the submit form, the mobile nav toggle) is
-  plain vanilla JS.
+- **TypeScript** throughout; no client framework in production. Keystatic's
+  admin UI needs React, but (see below) it's excluded from the production
+  build entirely, so the deployed site ships zero framework JS beyond what
+  each page needs. The site's own interactivity (the `/prep-schools/` facet
+  filters, the submit form, the mobile nav toggle) is plain vanilla JS.
+
+### Why Keystatic is dev-only
+
+Keystatic's admin UI needs React server-rendering, and bundling that into
+the production Cloudflare Worker repeatedly hit real Workers-runtime
+incompatibilities in React's SSR code (`MessageChannel is not defined` at
+deploy-validation time — a known rough edge in this stack combination, not
+something specific to this project). Rather than keep patching around it,
+`astro.config.mjs` only adds the `@astrojs/react` and `@keystatic/astro`
+integrations when running `astro dev` — a production `astro build` never
+sees them, so `/keystatic` doesn't exist as a route in the deployed site and
+none of that runtime friction applies.
+
+Nothing about the editing workflow is lost: run `npm run dev`, open
+`/keystatic`, edit and save. With a GitHub App configured (see
+[Adding or editing a listing](#adding-or-editing-a-listing)), that save
+commits straight to the repo and the live static site redeploys
+automatically, exactly as if it were hosted. The only difference from the
+original "hosted CMS" idea is that you open it from your machine rather
+than a production URL.
 
 ## Project structure
 
@@ -72,20 +94,37 @@ npm run dev
 ```
 
 - Site: http://localhost:4321
-- CMS editor: http://localhost:4321/keystatic (local filesystem storage in
-  dev — edits write straight to `src/content/**/*.mdx` on disk)
+- CMS editor: http://localhost:4321/keystatic — local filesystem storage by
+  default (edits write straight to `src/content/**/*.mdx` on disk); set up a
+  GitHub App (below) to switch it to GitHub storage mode instead
 
 `npm run build` produces a Cloudflare-ready build in `dist/` (`dist/client`
 for static assets, `dist/server` for the Worker, including a generated
-`dist/server/wrangler.json` — see [Deploying](#deploying)).
+`dist/server/wrangler.json` — see [Deploying](#deploying)). This build never
+includes Keystatic or React — see
+[Why Keystatic is dev-only](#why-keystatic-is-dev-only).
 
 ## Adding or editing a listing
 
-**Via Keystatic (recommended):** open `/keystatic`, pick **Prep Schools**,
-create or edit an entry. Every field in the editor is the same field the
-page templates read — there's nothing else to keep in sync. `slug` becomes
-the URL at `/prep-schools/<slug>/`; `about` is the long-form MDX body shown
-on the detail page.
+**Via Keystatic (recommended):** run `npm run dev`, open `/keystatic`, pick
+**Prep Schools**, create or edit an entry. Every field in the editor is the
+same field the page templates read — there's nothing else to keep in sync.
+`slug` becomes the URL at `/prep-schools/<slug>/`; `about` is the long-form
+MDX body shown on the detail page. By default this writes straight to
+`src/content/**/*.mdx` on disk — commit and push those changes yourself, or
+set up GitHub storage mode so Keystatic commits for you:
+
+1. Create a [Keystatic GitHub App](https://keystatic.com/docs/github-model)
+   connected to `heybmtn/prepschools`.
+2. Add its three values to your local `.env`:
+   ```
+   KEYSTATIC_GITHUB_CLIENT_ID=...
+   KEYSTATIC_GITHUB_CLIENT_SECRET=...
+   KEYSTATIC_SECRET=...
+   ```
+3. Restart `npm run dev`. `/keystatic` now saves via GitHub storage mode —
+   each save is a real commit to the repo, which triggers the same
+   Cloudflare build + deploy as any other push.
 
 **By hand:** add a new `.mdx` file to `src/content/schools/`, e.g.:
 
@@ -134,8 +173,10 @@ imported or submitted data. Blog posts follow the same pattern in
 Cloudflare has consolidated "Pages + Pages Functions" into **Workers with
 static assets** — the same platform, one deployment model. That's what
 `@astrojs/cloudflare` (v14+) and this repo target: static pages are served
-straight from `dist/client`, and only `/api/submit` and `/keystatic` run as
-Worker code, same as a Pages Function would have.
+straight from `dist/client`, and only `/api/submit` runs as Worker code,
+same as a Pages Function would have. (`/keystatic` is dev-only — see
+[Why Keystatic is dev-only](#why-keystatic-is-dev-only) — so there's no
+Worker route for it to worry about in production.)
 
 1. **D1 database** — already provisioned: `prepschools_submissions`
    (`e726bf33-1827-4025-9f5b-391bdaaacd03`), with the `0001_init.sql`
@@ -177,12 +218,11 @@ Worker code, same as a Pages Function would have.
    `[assets]` paths for the built output — deploy with that generated file,
    not the root `wrangler.toml` directly.
 
-5. **Keystatic in production** uses GitHub storage mode
-   (`keystatic.config.ts`, repo `heybmtn/prepschools`) so saving in the
-   editor commits straight to the repo and triggers a redeploy. This needs a
-   [Keystatic GitHub App](https://keystatic.com/docs/github-model) connected
-   to the repo, with `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`
-   and `KEYSTATIC_SECRET` set as Worker secrets.
+There's no step 5 for Keystatic — it's dev-only and isn't part of this
+build at all (see [Why Keystatic is dev-only](#why-keystatic-is-dev-only)).
+To set up GitHub-backed editing, see
+[Adding or editing a listing](#adding-or-editing-a-listing) — that's a local
+`.env` change, not anything deployed to Cloudflare.
 
 ### Local preview of the Worker build
 

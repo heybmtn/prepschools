@@ -2,14 +2,37 @@
 import { defineConfig } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import mdx from "@astrojs/mdx";
-import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import keystatic from "@keystatic/astro";
 
 const SITE_URL = "https://prepschools.pages.dev";
 
-// Static-first: pages prerender by default, individual routes (the submit
-// API, /keystatic) opt into on-request rendering with `export const prerender = false`.
+// `astro dev` puts "dev" in argv (whether run directly or via `npm run dev`,
+// which also sets npm_lifecycle_event="dev"); `astro build`/`astro preview`
+// do neither. Astro's defineConfig only accepts a plain object in this
+// version, so this has to be computed before the config literal rather than
+// via a factory-function form.
+const isDev = process.argv.includes("dev") || process.env.npm_lifecycle_event === "dev";
+
+// Static-first: every page prerenders to HTML at build time except the
+// submit API route, which opts into on-request rendering with
+// `export const prerender = false`.
+//
+// Keystatic (+ its React dependency) is only wired in for `astro dev` — see
+// README.md "Adding or editing a listing". It is deliberately left out of
+// `astro build`: bundling Keystatic's React admin UI into the production
+// Worker repeatedly hit Cloudflare Workers runtime incompatibilities in
+// React's SSR code (e.g. MessageChannel), which is unnecessary complexity
+// for a route nobody needs reachable in production. Content edited through
+// Keystatic locally still commits straight to GitHub (GitHub storage mode)
+// and the live site still redeploys automatically on that push.
+const integrations = [mdx(), sitemap()];
+
+if (isDev) {
+  const { default: react } = await import("@astrojs/react");
+  const { default: keystatic } = await import("@keystatic/astro");
+  integrations.push(react(), keystatic());
+}
+
 export default defineConfig({
   site: SITE_URL,
   output: "static",
@@ -17,20 +40,6 @@ export default defineConfig({
     imageService: "compile",
     // Persist D1/KV state between `astro dev` / `wrangler dev` runs locally.
     persistState: true,
-    // The workerd prerender environment doesn't yet support React 19's
-    // server renderer (MessageChannel), which @keystatic/astro's admin UI
-    // pulls in. Prerender with Node instead; the deployed Worker still runs
-    // on workerd as normal — this only affects the build-time render pass.
-    prerenderEnvironment: "node",
   }),
-  integrations: [mdx(), react(), sitemap(), keystatic()],
-  vite: {
-    resolve: {
-      // Keystatic's admin UI needs the browser build of react-dom in the Cloudflare bundle.
-      alias:
-        process.env.NODE_ENV === "production"
-          ? { "react-dom/server": "react-dom/server.browser" }
-          : {},
-    },
-  },
+  integrations,
 });
