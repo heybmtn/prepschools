@@ -217,9 +217,19 @@ The 10 seeded listings are real, well-known UK prep schools, filled in only
 with publicly well-known facts (name, town/county, age range, gender,
 day/boarding, official website, a short neutral description). Fees, head
 names and anything not confidently known are left blank. All ship with
-`verified: false`. **Spot-check each school's official website URL before
-this goes live** — they were filled in from general knowledge, not scraped,
-and domains occasionally change.
+`verified: false`.
+
+The website URLs were originally filled in from general knowledge, then
+spot-checked with live web searches. Four were wrong and have been
+corrected: Cheam School (`cheamschool.co.uk` → `cheamschool.com`, and its
+county corrected to Berkshire), Cranleigh Preparatory School
+(`cranleighprep.co.uk` → `cranprep.org`), Beaudesert Park School
+(`beaudesertpark.co.uk` → `beaudesert.gloucs.sch.uk`), and Aysgarth School
+(`.co.uk` → `.com`; it also became fully co-educational in September 2024,
+so its `gender` field was updated from `boys` to `co-ed`). This check was
+done via search-result snippets, not by loading each page directly, so it's
+still worth a final human click-through before this goes live — but it's a
+meaningfully stronger baseline than the original unverified pass.
 
 ## Known limitations / follow-ups
 
